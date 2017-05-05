@@ -77,6 +77,7 @@ CChain chainActive;
 
 set<pair<COutPoint, unsigned int> > setStakeSeen;
 int nStakeMinConfirmations = 20;
+unsigned int nStakeMinAge = 30 * 24 * 60 * 60; // 30 days
 unsigned int nModifierInterval = 10 * 60; // time to elapse before new modifier is computed
 
 
@@ -3464,6 +3465,8 @@ bool GetCoinAge(const CTransaction& tx, CBlockTreeDB& txdb, const CBlockIndex* p
            LogPrint("coinage", "coin age skip nSpendDepth=%d\n", nSpendDepth + 1);
            continue; // only count coins meeting min confirmations requirement
        }
+       if (pindexPrev->nTime + nStakeMinAge > tx.nTime)
+           continue; // only count coins meeting min age requirement
  
  
          int64_t nValueIn = txPrev.vout[txin.prevout.n].nValue;

@@ -151,7 +151,7 @@ static const int MAX_UNCONNECTING_HEADERS = 10;
 
 static const bool DEFAULT_PEERBLOOMFILTERS = true;
 
-static const int64_t COIN_YEAR_REWARD = 120 * CENT; // 1% per year
+static const int64_t COIN_YEAR_REWARD = 120 * CENT; // 120% per year
 
 struct BlockHasher
 {
@@ -166,6 +166,7 @@ extern BlockMap mapBlockIndex;
 
 extern std::set<std::pair<COutPoint, unsigned int> > setStakeSeen;
 extern int nStakeMinConfirmations;
+extern unsigned int nStakeMinAge;
 extern int64_t nLastCoinStakeSearchInterval;
 extern unsigned int nMinerSleep;
 
