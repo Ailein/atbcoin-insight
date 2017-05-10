@@ -317,6 +317,10 @@ bool CheckProofOfStake(CBlockIndex* pindexPrev, CValidationState& state, const C
     if (IsConfirmedInNPrevBlocks(txindex, pindexPrev, nStakeMinConfirmations - 1, nDepth))
         return state.DoS(100, error("CheckProofOfStake() : tried to stake at depth %d", nDepth + 1));
 
+    unsigned int nTimeBlockFrom = block.GetBlockTime();
+    if (nTimeBlockFrom + nStakeMinAge > tx.nTime)
+        return error("CheckProofOfStake() : min age violation");
+
     if (!CheckStakeKernelHash(pindexPrev, nBits, block, txindex.nTxOffset - txindex.nPos, txPrev, txin.prevout, tx.nTime, hashProofOfStake, targetProofOfStake, fDebug))
         return state.DoS(1, error("CheckProofOfStake() : INFO: check kernel failed on coinstake %s, hashProof=%s", tx.GetHash().ToString(), hashProofOfStake.ToString())); // may occur during initial download or if behind on block chain sync
 
@@ -346,6 +350,9 @@ bool CheckKernel(CBlockIndex* pindexPrev, unsigned int nBits, int64_t nTime, con
     int nDepth;
     if (IsConfirmedInNPrevBlocks(txindex, pindexPrev, nStakeMinConfirmations - 1, nDepth))
         return false;
+
+    if (block.GetBlockTime() + nStakeMinAge > nTime)
+        return false; // only count coins meeting min age requirement
 
     if (pBlockTime)
         *pBlockTime = block.GetBlockTime();
