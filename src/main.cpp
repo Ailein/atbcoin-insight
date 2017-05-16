@@ -77,7 +77,7 @@ CChain chainActive;
 
 set<pair<COutPoint, unsigned int> > setStakeSeen;
 int nStakeMinConfirmations = 20;
-unsigned int nStakeMinAge = 30 * 24 * 60 * 60; // 30 days
+unsigned int nStakeMinAge = 60; // 30 days
 unsigned int nModifierInterval = 10 * 60; // time to elapse before new modifier is computed
 
 
