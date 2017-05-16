@@ -2752,7 +2752,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             if (nActualStakeReward > blockReward)
                 return state.DoS(100,
                     error("ConnectBlock(): coinstake pays too much (actual=%d vs limit=%d)",
-                          block.vtx[1].GetValueOut(), blockReward),
+                          nActualStakeReward, blockReward),
                           REJECT_INVALID, "bad-cs-amount");
         }
     
