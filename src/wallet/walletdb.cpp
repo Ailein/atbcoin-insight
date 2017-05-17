@@ -117,6 +117,11 @@ bool CWalletDB::WriteCScript(const uint160& hash, const CScript& redeemScript)
     return Write(std::make_pair(std::string("cscript"), hash), *(const CScriptBase*)(&redeemScript), false);
 }
 
+bool CWalletDB::WriteBonusKey(const uint160& hash, const CBonusinfo& Bonusinfo)
+{
+    nWalletDBUpdated++;
+    return Write(std::make_pair(std::string("bonus"), Bonusinfo.getHash()), Bonusinfo, false);
+}
 bool CWalletDB::WriteWatchOnly(const CScript &dest)
 {
     nWalletDBUpdated++;
