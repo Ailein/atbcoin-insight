@@ -188,14 +188,15 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn, bo
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vout.resize(1);
     
-    coinbaseTx.nTime = GetAdjustedTime();
     if (!fProofOfStake)
     {
+        coinbaseTx.nTime = 0;
         coinbaseTx.vout[0].nValue = nFees + GetProofOfWorkReward();
         coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
     }
     else
     {
+        coinbaseTx.nTime = GetAdjustedTime();
         coinbaseTx.vout[0].SetEmpty();
     }
     
