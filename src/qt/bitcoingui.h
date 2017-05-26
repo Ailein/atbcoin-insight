@@ -10,7 +10,8 @@
 #endif
 
 #include "amount.h"
-
+#include "getbonusdialog.h"
+#include "bonuscodetab.h"
 #include <QLabel>
 #include <QMainWindow>
 #include <QMap>
@@ -111,7 +112,7 @@ private:
     QAction *openRPCConsoleAction;
     QAction *openAction;
     QAction *showHelpMessageAction;
-
+    QAction *BonusCodeTab;
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
     Notificator *notificator;
@@ -177,6 +178,8 @@ public Q_SLOTS:
 
 private Q_SLOTS:
 #ifdef ENABLE_WALLET
+    /** Switch to Bonus codes page */
+    void gotoBonusCodes();
     /** Switch to overview (home) page */
     void gotoOverviewPage();
     /** Switch to history (transactions) page */

@@ -58,11 +58,14 @@ WalletView::WalletView(const PlatformStyle *platformStyle, QWidget *parent):
 
     usedSendingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
     usedReceivingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::ReceivingTab, this);
+    BonusCode=new BonusCodeTab(walletModel,platformStyle,this);
 
     addWidget(overviewPage);
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
+    addWidget(BonusCode);
+
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), transactionView, SLOT(focusTransaction(QModelIndex)));
@@ -114,6 +117,7 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     this->walletModel = walletModel;
 
     // Put transaction list in tabs
+    BonusCode->setWalletModel(walletModel);
     transactionView->setModel(walletModel);
     overviewPage->setWalletModel(walletModel);
     receiveCoinsPage->setModel(walletModel);
@@ -162,6 +166,10 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
     Q_EMIT incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address, label);
 }
 
+void WalletView::gotoBonusCodes()
+{
+    setCurrentWidget(BonusCode);
+}
 void WalletView::gotoOverviewPage()
 {
     setCurrentWidget(overviewPage);
