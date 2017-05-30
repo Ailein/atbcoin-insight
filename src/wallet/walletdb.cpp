@@ -613,7 +613,6 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 strErr = "Error reading wallet database: SetHDChain failed";
                 return false;
             }
-
         }
         else if (strType == "bonus")
         {
