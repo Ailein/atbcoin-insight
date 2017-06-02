@@ -19,7 +19,7 @@
 #include "splashscreen.h"
 #include "utilitydialog.h"
 #include "winshutdownmonitor.h"
-
+#include <QFontDatabase>
 #ifdef ENABLE_WALLET
 #include "paymentserver.h"
 #include "walletmodel.h"
@@ -30,6 +30,7 @@
 #include "scheduler.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "css.h"
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
@@ -311,6 +312,12 @@ BitcoinApplication::BitcoinApplication(int &argc, char **argv):
     // UI per-platform customization
     // This must be done inside the BitcoinApplication constructor, or after it, because
     // PlatformStyle::instantiate requires a QApplication
+    //QFontDatabase::addApplicationFont(":/icons/Bold");
+   // QFontDatabase::addApplicationFont(":/icons/Medium");
+   // QFontDatabase::addApplicationFont(":/icons/Regulyar");
+    int id = QFontDatabase::addApplicationFont(":/icons/Medium");
+    QString family = QFontDatabase::applicationFontFamilies(id).at(0);
+    QApplication::setFont(QFont (family));
     std::string platformName;
     platformName = GetArg("-uiplatform", BitcoinGUI::DEFAULT_UIPLATFORM);
     platformStyle = PlatformStyle::instantiate(QString::fromStdString(platformName));
@@ -356,7 +363,7 @@ void BitcoinApplication::createOptionsModel(bool resetSettings)
 void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
 {
     window = new BitcoinGUI(platformStyle, networkStyle, 0);
-
+    CSS::ReadCss(window,":/style/WalletStyle");
     pollShutdownTimer = new QTimer(window);
     connect(pollShutdownTimer, SIGNAL(timeout()), window, SLOT(detectShutdown()));
     pollShutdownTimer->start(200);
