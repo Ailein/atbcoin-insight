@@ -55,14 +55,16 @@ void BonusCodeDialog::CreateClick(){
     std::string temp=KEY_TEMPLATE;
     for(unsigned char i:temp)
         key.push_back((i!='-')?((rand()%5)?char(rand()%26+65):char(rand()%10+48)):i);
-    uint160 temp3= Hash160(CScript()<<valtype(key.begin(),key.end()));
+    CScript s;
+    s << valtype(key.begin(), key.end());
+    uint160 temp3= Hash160(s);
     valtype temp4(temp3.begin(),temp3.end());
     
 
 /********************create a new transaction*************************/
     std::vector<CRecipient> Recipient;
     CRecipient rec;
-    rec.scriptPubKey=CScript()<<OP_HASH160<<temp4<<OP_EQUAL;
+    rec.scriptPubKey=CScript()<<OP_0<<OP_DROP<<OP_HASH160<<temp4<<OP_EQUAL;
     switch (ui->CCoins->currentIndex()) {
     case BitcoinUnits::BTC:
         rec.nAmount=round(ui->SCoins->value()*COIN);

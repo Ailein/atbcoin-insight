@@ -1,10 +1,9 @@
 #include "bonuscodetab.h"
 #include "ui_bonuscodetab.h"
-#include "walletmodel.h"
 #include "getbonusdialog.h"
-#include "../wallet/wallet.h"
 #include <QTime>
-#include "../main.h"
+#include "wallet/wallet.h"
+#include "main.h"
 BonusCodeTab::BonusCodeTab(WalletModel *wmodel_, const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::BonusCodeTab)

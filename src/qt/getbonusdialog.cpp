@@ -22,8 +22,8 @@ GetBonusDialog::GetBonusDialog(QWidget *parent) :
 void GetBonusDialog::OkClick(bool){
     std::string key= ui->ECode->text().toStdString();
 /********************create a new transaction*************************/
-    valtype vch(key.begin(),key.end());
-    CScript s= CScript()<<vch;
+    CScript s; 
+    s << valtype(key.begin(),key.end());
     pwalletMain->AddCScript(s);
     pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
     pwalletMain->ReacceptWalletTransactions();

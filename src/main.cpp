@@ -1994,7 +1994,7 @@ void CheckForkWarningConditions()
                 pindexBestForkBase->phashBlock->ToString() + std::string("'");
             AlertNotify(warning);
         }
-        if (pindexBestForkTip && pindexBestForkBase)
+        if (pindexBestForkTip && pindexBestForkBase && pindexBestForkBase->phashBlock && pindexBestForkTip->phashBlock)
         {
             LogPrintf("%s: Warning: Large valid fork found\n  forking the chain at height %d (%s)\n  lasting to height %d (%s).\nChain state database corruption likely.\n", __func__,
                    pindexBestForkBase->nHeight, pindexBestForkBase->phashBlock->ToString(),
