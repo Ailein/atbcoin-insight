@@ -606,7 +606,6 @@ public:
 
     bool fFileBacked;
     std::string strWalletFile;
-
     std::set<int64_t> setKeyPool;
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
 

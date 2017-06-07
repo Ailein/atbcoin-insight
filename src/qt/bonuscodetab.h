@@ -1,12 +1,12 @@
 #ifndef BONUSCODETAB_H
 #define BONUSCODETAB_H
 
-#include "bonuscodedialog.h"
 #include "platformstyle.h"
 #include <QWidget>
 #include "walletmodel.h"
-
+#include "transactionfilterproxy.h"
 #include <QStandardItemModel>
+#define KEY_TEMPLATE "3EIOPJ4A-JMWUIGPV-NR76TESB-UYWH1UJS-HWJOXSWK"
 namespace Ui {
 class BonusCodeTab;
 }
@@ -24,7 +24,9 @@ private:
     Ui::BonusCodeTab *ui;
     WalletModel *wmodel; 
     const PlatformStyle *platformStyle;
-    QStandardItemModel *model;
+    bool keyCheck(const std::string &str);
+    CWalletTx* findTx(const CScript& script);
+    QSortFilterProxyModel *model;
 private Q_SLOTS:
     void updateBonusList();
     void getBonusClick(bool);

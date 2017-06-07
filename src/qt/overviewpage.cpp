@@ -19,7 +19,7 @@
 #include <QPainter>
 
 #define DECORATION_SIZE 54
-#define NUM_ITEMS 5
+#define NUM_ITEMS 8
 
 class TxViewDelegate : public QAbstractItemDelegate
 {
@@ -36,20 +36,26 @@ public:
                       const QModelIndex &index ) const
     {
         painter->save();
-
         QIcon icon = qvariant_cast<QIcon>(index.data(TransactionTableModel::RawDecorationRole));
         QRect mainRect = option.rect;
-        QRect decorationRect(mainRect.topLeft(), QSize(DECORATION_SIZE, DECORATION_SIZE));
-        int xspace = DECORATION_SIZE + 8;
-        int ypad = 6;
+        QRect decorationRect(mainRect.topLeft(), QSize(40, 33));
+        QPainterPath path;
+        path.addRoundedRect(QRect(mainRect.left(),mainRect.top()+3,mainRect.width()-1,mainRect.height()-3), 2, 2);
+        painter->fillPath(path,Qt::white);
+        painter->setPen(Qt::white);
+        painter->drawPath(path);
+
+        int xspace = DECORATION_SIZE -20;
+        int ypad = 10;
         int halfheight = (mainRect.height() - 2*ypad)/2;
         QRect amountRect(mainRect.left() + xspace, mainRect.top()+ypad, mainRect.width() - xspace, halfheight);
         QRect addressRect(mainRect.left() + xspace, mainRect.top()+ypad+halfheight, mainRect.width() - xspace, halfheight);
-        icon = platformStyle->SingleColorIcon(icon);
         icon.paint(painter, decorationRect);
 
         QDateTime date = index.data(TransactionTableModel::DateRole).toDateTime();
         QString address = index.data(Qt::DisplayRole).toString();
+        address.remove(0,2);
+        address.remove(address.length()-1,1);
         qint64 amount = index.data(TransactionTableModel::AmountRole).toLongLong();
         bool confirmed = index.data(TransactionTableModel::ConfirmedRole).toBool();
         QVariant value = index.data(Qt::ForegroundRole);
@@ -59,8 +65,7 @@ public:
             QBrush brush = qvariant_cast<QBrush>(value);
             foreground = brush.color();
         }
-
-        painter->setPen(foreground);
+        painter->setPen(QColor::fromRgb(0xb8,0xb8,0x9e));
         QRect boundingRect;
         painter->drawText(addressRect, Qt::AlignLeft|Qt::AlignVCenter, address, &boundingRect);
 
@@ -87,12 +92,17 @@ public:
         QString amountText = BitcoinUnits::formatWithUnit(unit, amount, true, BitcoinUnits::separatorAlways);
         if(!confirmed)
         {
-            amountText = QString("[") + amountText + QString("]");
+            amountText = QString("") + amountText + QString("");
         }
-        painter->drawText(amountRect, Qt::AlignRight|Qt::AlignVCenter, amountText);
+        if(amount>0)
+            painter->setPen(QColor::fromRgb(0x4c,0xa3,0x80));
+        else
+            painter->setPen(QColor::fromRgb(0xe8,0x78,0x59));
+        painter->drawText(amountRect, Qt::AlignLeft |Qt::AlignVCenter, amountText);
 
-        painter->setPen(option.palette.color(QPalette::Text));
-        painter->drawText(amountRect, Qt::AlignLeft|Qt::AlignVCenter, GUIUtil::dateTimeStr(date));
+        painter->setPen(QColor::fromRgb(0xde,0xde,0xde));
+        amountRect.setWidth(amountRect.width()-15);
+        painter->drawText(amountRect, Qt::AlignRight|Qt::AlignVCenter, GUIUtil::dateTimeStr(date));
 
         painter->restore();
     }

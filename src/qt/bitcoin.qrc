@@ -1,4 +1,4 @@
-<!DOCTYPE RCC><RCC version="1.0">
+<RCC>
     <qresource prefix="/icons">
         <file alias="bitcoin">res/icons/bitcoin.png</file>
         <file alias="address-book">res/icons/address-book.png</file>
@@ -50,6 +50,16 @@
         <file alias="fontsmaller">res/icons/fontsmaller.png</file>
         <file alias="prompticon">res/icons/chevron.png</file>
         <file alias="transaction_abandoned">res/icons/transaction_abandoned.png</file>
+        <file alias="checkbox">res/icons/checkbox.png</file>
+        <file alias="c_coupon">res/icons/create_coupon.png</file>
+        <file alias="r_coupon">res/icons/receive_coupon.png</file>
+        <file alias="Bold">res/{Colophon} Aperçu Bold Typeface.otf</file>
+        <file alias="Medium">res/{Colophon} Aperçu Medium Typeface.otf</file>
+        <file alias="Regulyar">res/{Colophon} Aperçu Regular Typeface.otf</file>
+        <file alias="Down">res/icons/Down.png</file>
+        <file alias="Up">res/icons/Up.png</file>
+        <file alias="Down_d">res/icons/Down_disabled.png</file>
+        <file alias="Up_d">res/icons/Up_disabled.png</file>
     </qresource>
     <qresource prefix="/movies">
         <file alias="spinner-000">res/movies/spinner-000.png</file>
@@ -88,5 +98,8 @@
         <file alias="spinner-033">res/movies/spinner-033.png</file>
         <file alias="spinner-034">res/movies/spinner-034.png</file>
         <file alias="spinner-035">res/movies/spinner-035.png</file>
+    </qresource>
+    <qresource prefix="/style">
+        <file alias="WalletStyle">WalletStyle.css</file>
     </qresource>
 </RCC>
