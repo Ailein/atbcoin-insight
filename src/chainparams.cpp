@@ -108,7 +108,7 @@ public:
         consensus.nMajorityRejectBlockOutdated = 950;
         consensus.nMajorityWindow = 1000;
         consensus.BIP34Height = 227931;
-        consensus.BIP34Hash = uint256S("0000359578c5c423cb14ce714d260d0bb879fea5a469cf71112c9cd47ed72c7d");
+        consensus.BIP34Hash = uint256S("00001c09ef18c89d36af3dcbfdc4406b6acf20f65759b54d88fafe52736dff0a");
         consensus.nPowAveragingWindow = 17;
         consensus.nPowMaxAdjustDown = 32; // 32% adjustment down
         consensus.nPowMaxAdjustUp = 16; // 16% adjustment up
@@ -122,20 +122,18 @@ public:
         
         consensus.nRuleChangeActivationThreshold = 14; // 95% of 15
         consensus.nMinerConfirmationWindow = 15; // nTargetTimespan / nTargetSpacing
-        
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0; // January 1, 2008
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 0; // December 31, 2008
 
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
         // Deployment of BIP68, BIP112, and BIP113.
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 0; // May 1st, 2016
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 0; // May 1st, 2017
-
-        // Deployment of SegWit (BIP141 and BIP143)
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 999999999999ULL;
+        // Deployment of SegWit (BIP141, BIP143, and BIP147)
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 0; // Never / undefined
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 999999999999ULL;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -151,12 +149,12 @@ public:
         
         nPruneAfterHeight = 100000;
         
-        genesis = CreateGenesisBlock(1495784004, 158513466, 0x1f00ffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1495548862, 158483501, 0x1f00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 
         // ComputeGenesis(genesis, consensus.powLimit);
-        assert(consensus.hashGenesisBlock == uint256S("0000359578c5c423cb14ce714d260d0bb879fea5a469cf71112c9cd47ed72c7d"));
-        assert(genesis.hashMerkleRoot == uint256S("664d3416b4f7c4f582705de58445390e68063ffacd2ac65a6c399fe29505e3fe"));
+        assert(consensus.hashGenesisBlock == uint256S("00001c09ef18c89d36af3dcbfdc4406b6acf20f65759b54d88fafe52736dff0a"));
+        assert(genesis.hashMerkleRoot == uint256S("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
         
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
@@ -179,14 +177,14 @@ public:
         
 		checkpointData = (CCheckpointData){
             boost::assign::map_list_of
-            ( 0, uint256S("0000359578c5c423cb14ce714d260d0bb879fea5a469cf71112c9cd47ed72c7d")),
+            ( 0, uint256S("00001c09ef18c89d36af3dcbfdc4406b6acf20f65759b54d88fafe52736dff0a")),
             0, // * UNIX timestamp of last checkpoint block
             0, // * total number of transactions between genesis and last checkpoint
                //   (the tx=... number in the SetBestChain debug.log lines)
             0  // * estimated number of transactions per day after checkpoint
         };
 		
-        nLastPOWBlock = 300;
+        nLastPOWBlock = 1001;
         
     }
 };
@@ -206,7 +204,7 @@ public:
         consensus.nMajorityRejectBlockOutdated = 75;
         consensus.nMajorityWindow = 100;
         consensus.BIP34Height = 21111;
-        consensus.BIP34Hash = uint256S("0000d081ee331e64cac0e5bd516842928560f62fa0956555d944d052240bf0ea");
+        consensus.BIP34Hash = uint256S("000024309d0726040667a1cddb8a2db1c5d107f239083a118b7888f8df806b76");
         consensus.nPowAveragingWindow = 17;
         consensus.nPowMaxAdjustDown = 32; // 32% adjustment down
         consensus.nPowMaxAdjustUp = 16; // 16% adjustment up
@@ -223,18 +221,16 @@ public:
         consensus.nMinerConfirmationWindow = 15; // nTargetTimespan / nTargetSpacing
         
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0; // January 1, 2008
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 0; // December 31, 2008
-
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
         // Deployment of BIP68, BIP112, and BIP113.
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 0; // March 1st, 2016
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 0; // May 1st, 2017
-
-        // Deployment of SegWit (BIP141 and BIP143)
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 999999999999ULL;
+        // Deployment of SegWit (BIP141, BIP143, and BIP147)
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 0; // May 1st 2016
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 0; // May 1st 2017
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 999999999999ULL;
 
         pchMessageStart[0] = 0x61;
         pchMessageStart[1] = 0x74;
@@ -246,12 +242,12 @@ public:
         nPruneAfterHeight = 1000;
 
         
-        genesis = CreateGenesisBlock(1495784004, 214740, 0x1f00ffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1495548862, 209407, 0x1f00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 
-        //ComputeGenesis(genesis, consensus.powLimit);
-        assert(consensus.hashGenesisBlock == uint256S("0000d081ee331e64cac0e5bd516842928560f62fa0956555d944d052240bf0ea"));
-        assert(genesis.hashMerkleRoot == uint256S("664d3416b4f7c4f582705de58445390e68063ffacd2ac65a6c399fe29505e3fe"));
+        // ComputeGenesis(genesis, consensus.powLimit);
+        assert(consensus.hashGenesisBlock == uint256S("000024309d0726040667a1cddb8a2db1c5d107f239083a118b7888f8df806b76"));
+        assert(genesis.hashMerkleRoot == uint256S("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
         
 
         vFixedSeeds.clear();
@@ -282,7 +278,7 @@ public:
         
         checkpointData = (CCheckpointData) {
             boost::assign::map_list_of
-            ( 0, uint256S("0000d081ee331e64cac0e5bd516842928560f62fa0956555d944d052240bf0ea")),
+            ( 0, uint256S("000024309d0726040667a1cddb8a2db1c5d107f239083a118b7888f8df806b76")),
             0,
             0,
             0
@@ -344,13 +340,13 @@ public:
         nPruneAfterHeight = 1000;
 
         
-        genesis = CreateGenesisBlock(1495784004, 1, 0x207fffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1495548862, 1, 0x207fffff, 1, 50 * COIN);
         
         consensus.hashGenesisBlock = genesis.GetHash();
 
         // ComputeGenesis(genesis, consensus.powLimit);
-        assert(consensus.hashGenesisBlock == uint256S("23138032a903ced9ec9efc059b1ae245ee098b2e9b91001edb41b97fa61cbf21"));
-        assert(genesis.hashMerkleRoot == uint256S("664d3416b4f7c4f582705de58445390e68063ffacd2ac65a6c399fe29505e3fe"));
+        assert(consensus.hashGenesisBlock == uint256S("63563505694c6b2b15d8d74fff19ff768ffd2fb74e93bf48b025eb23b7c8364c"));
+        assert(genesis.hashMerkleRoot == uint256S("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
         
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
@@ -365,7 +361,7 @@ public:
         
         checkpointData = (CCheckpointData){
             boost::assign::map_list_of
-            ( 0, uint256S("23138032a903ced9ec9efc059b1ae245ee098b2e9b91001edb41b97fa61cbf21")),
+            ( 0, uint256S("3511552c6a68b62c7ba8ac6fd24ba1ec1ad615e38aa6b254f198d517f87205fc")),
             0,
             0,
             0

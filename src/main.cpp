@@ -1906,18 +1906,17 @@ CAmount GetProofOfStakeReward()
 }
 
 // miner's coin stake reward
-int64_t GetProofOfStakeReward(const CBlockIndex* pindexPrev, int64_t nCoinAge, int64_t nFees)
+int64_t GetProofOfStakeReward(const int nHeight, int64_t nCoinAge, int64_t nFees)
 {
     int64_t nSubsidy;
-    int64_t nMutiplier = COIN_YEAR_REWARD * 33 / (365 * 33 + 8);
     const Consensus::Params& consensusParams = Params().GetConsensus();
-    int halvings = (pindexPrev->nHeight - Params().LastPOWBlock()) / consensusParams.nSubsidyHalvingInterval;
+    int halvings = (nHeight - Params().LastPOWBlock()) / consensusParams.nSubsidyHalvingInterval;
     // Force block reward to zero when right shift is undefined.
     if (halvings >= 64)
         return 0;
     // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
-    nMutiplier >>= halvings;
 
+    int64_t nMutiplier = (COIN_YEAR_REWARD >> halvings) * 33 / (365 * 33 + 8);
 
     nSubsidy = nCoinAge * nMutiplier;
 
@@ -1943,6 +1942,8 @@ bool IsInitialBlockDownload()
         return false;
     if (fImporting || fReindex)
         return true;
+    if (chainActive.Tip() == NULL)
+        return true;
     if (fCheckpointsEnabled && chainActive.Height() < Checkpoints::GetTotalBlocksEstimate(chainParams.Checkpoints()))
         return true;
     bool state = (chainActive.Height() < pindexBestHeader->nHeight - 24 * 6 ||
@@ -1954,7 +1955,8 @@ bool IsInitialBlockDownload()
 
 bool fLargeWorkForkFound = false;
 bool fLargeWorkInvalidChainFound = false;
-CBlockIndex *pindexBestForkTip = NULL, *pindexBestForkBase = NULL;
+std::unique_ptr<CBlockIndex> pindexBestForkTip, pindexBestForkBase; 
+// CBlockIndex *pindexBestForkTip = NULL, *pindexBestForkBase = NULL;
 
 static void AlertNotify(const std::string& strMessage)
 {
@@ -1983,22 +1985,22 @@ void CheckForkWarningConditions()
 
     // If our best fork is no longer within 72 blocks (+/- 12 hours if no one mines it)
     // of our head, drop it
-    if (pindexBestForkTip && chainActive.Height() - pindexBestForkTip->nHeight >= 72)
-        pindexBestForkTip = NULL;
+    if (pindexBestForkTip && chainActive.Height() - pindexBestForkTip.get()->nHeight >= 72)
+        pindexBestForkTip.reset();
 
     if (pindexBestForkTip || (pindexBestInvalid && pindexBestInvalid->nChainWork > chainActive.Tip()->nChainWork + (GetBlockProof(*chainActive.Tip()) * 6)))
     {
         if (!fLargeWorkForkFound && pindexBestForkBase)
         {
             std::string warning = std::string("'Warning: Large-work fork detected, forking after block ") +
-                pindexBestForkBase->phashBlock->ToString() + std::string("'");
+                pindexBestForkBase.get()->phashBlock->ToString() + std::string("'");
             AlertNotify(warning);
         }
         if (pindexBestForkTip && pindexBestForkBase)
         {
             LogPrintf("%s: Warning: Large valid fork found\n  forking the chain at height %d (%s)\n  lasting to height %d (%s).\nChain state database corruption likely.\n", __func__,
-                   pindexBestForkBase->nHeight, pindexBestForkBase->phashBlock->ToString(),
-                   pindexBestForkTip->nHeight, pindexBestForkTip->phashBlock->ToString());
+                   pindexBestForkBase.get()->nHeight, pindexBestForkBase.get()->phashBlock->ToString(),
+                   pindexBestForkTip.get()->nHeight, pindexBestForkTip.get()->phashBlock->ToString());
             fLargeWorkForkFound = true;
         }
         else
@@ -2040,8 +2042,8 @@ void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip)
             pindexNewForkTip->nChainWork - pfork->nChainWork > (GetBlockProof(*pfork) * 7) &&
             chainActive.Height() - pindexNewForkTip->nHeight < 72)
     {
-        pindexBestForkTip = pindexNewForkTip;
-        pindexBestForkBase = pfork;
+        pindexBestForkTip.reset(new CBlockIndex(*pindexNewForkTip));
+        pindexBestForkBase.reset(new CBlockIndex(*pfork));
     }
 
     CheckForkWarningConditions();
@@ -2748,7 +2750,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             if (!GetCoinAge(block.vtx[1], *pblocktree, pindex->pprev, nCoinAge))
                 return error("ConnectBlock() : %s unable to get coin age for coinstake", block.vtx[1].GetHash().ToString());
             
-            CAmount blockReward = GetProofOfStakeReward(pindex->pprev, nCoinAge, nFees);
+            CAmount blockReward = GetProofOfStakeReward(pindex->pprev->nHeight, nCoinAge, nFees);
             if (nActualStakeReward > blockReward)
                 return state.DoS(100,
                     error("ConnectBlock(): coinstake pays too much (actual=%d vs limit=%d)",
