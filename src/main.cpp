@@ -1942,6 +1942,8 @@ bool IsInitialBlockDownload()
         return false;
     if (fImporting || fReindex)
         return true;
+    if (chainActive.Tip() == NULL)
+        return true;
     if (fCheckpointsEnabled && chainActive.Height() < Checkpoints::GetTotalBlocksEstimate(chainParams.Checkpoints()))
         return true;
     bool state = (chainActive.Height() < pindexBestHeader->nHeight - 24 * 6 ||
