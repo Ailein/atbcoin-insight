@@ -4,7 +4,7 @@
 
 #ifndef BITCOIN_QT_GUICONSTANTS_H
 #define BITCOIN_QT_GUICONSTANTS_H
-
+#include "../amount.h"
 /* Milliseconds between model updates */
 static const int MODEL_UPDATE_DELAY = 250;
 
@@ -17,14 +17,26 @@ static const int STATUSBAR_ICONSIZE = 16;
 static const bool DEFAULT_SPLASHSCREEN = true;
 
 /* Invalid field background style */
-#define STYLE_INVALID "background:#FF8080"
+#define STYLE_INVALID "background:#e87764"
+
+#define STATIC_COIN_MODE 0      //Mode in which all in one currency will be displayed with accuracy STATIC_DECEMALS.
+#define DYNAMIC_COIN_MODE 1     //Mode in which several display options will be offered.
+#define CUSTOM_COIN_MODE 2      //Mode in which the accuracy is determined by STATIC_DECEMALS, and the factor CUSTOM_FACTOR.
+
+
+#define CUSTOM_FACTOR COIN      //Value of a unit of currency
+#define STATIC_DECEMALS 8       //Precision after the decimal point point in static and custom mode
+
+#define COIN_MODE STATIC_COIN_MODE //Currency display mode.
 
 /* Transaction list -- unconfirmed transaction */
-#define COLOR_UNCONFIRMED QColor(128, 128, 128)
+#define COLOR_UNCONFIRMED QColor(0xc5,0xec,0xe8)
 /* Transaction list -- negative amount */
-#define COLOR_NEGATIVE QColor(255, 0, 0)
+#define COLOR_NEGATIVE QColor(0xf6,0xe3,0x95)
+#define COLOR_POSITIVE QColor(0xa4,0xf6,0x41)
+
 /* Transaction list -- bare address (without label) */
-#define COLOR_BAREADDRESS QColor(140, 140, 140)
+#define COLOR_BAREADDRESS QColor(0xc5,0xec,0xe8)
 /* Transaction list -- TX status decoration - open until date */
 #define COLOR_TX_STATUS_OPENUNTILDATE QColor(64, 64, 255)
 /* Transaction list -- TX status decoration - offline */
@@ -50,7 +62,7 @@ static const int MAX_URI_LENGTH = 255;
 
 #define QAPP_ORG_NAME "Bitcoin"
 #define QAPP_ORG_DOMAIN "bitcoin.org"
-#define QAPP_APP_NAME_DEFAULT "Bitcoin-Qt"
-#define QAPP_APP_NAME_TESTNET "Bitcoin-Qt-testnet"
+#define QAPP_APP_NAME_DEFAULT "Atbcoin-Qt"
+#define QAPP_APP_NAME_TESTNET "Atbcoin-Qt-testnet"
 
 #endif // BITCOIN_QT_GUICONSTANTS_H

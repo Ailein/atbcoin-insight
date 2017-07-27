@@ -50,11 +50,11 @@ public:
     };
 
     enum ColumnWidths {
-        STATUS_COLUMN_WIDTH = 30,
+        STATUS_COLUMN_WIDTH = 22,
         WATCHONLY_COLUMN_WIDTH = 23,
-        DATE_COLUMN_WIDTH = 120,
-        TYPE_COLUMN_WIDTH = 113,
-        AMOUNT_MINIMUM_COLUMN_WIDTH = 120,
+        DATE_COLUMN_WIDTH = 140,
+        TYPE_COLUMN_WIDTH = 190,
+        AMOUNT_MINIMUM_COLUMN_WIDTH = 170,
         MINIMUM_COLUMN_WIDTH = 23
     };
 
@@ -68,7 +68,7 @@ private:
     QComboBox *watchOnlyWidget;
     QLineEdit *addressWidget;
     QLineEdit *amountWidget;
-
+    QPushButton *exportButton;
     QMenu *contextMenu;
     QSignalMapper *mapperThirdPartyTxUrls;
 
@@ -107,6 +107,7 @@ Q_SIGNALS:
     void message(const QString &title, const QString &message, unsigned int style);
 
 public Q_SLOTS:
+    void refreshList(const QString &);
     void chooseDate(int idx);
     void chooseType(int idx);
     void chooseWatchonly(int idx);

@@ -320,7 +320,6 @@ public:
         if (ser_action.ForRead())
             Init(NULL);
         char fSpent = false;
-
         if (!ser_action.ForRead())
         {
             mapValue["fromaccount"] = strFromAccount;
@@ -608,6 +607,7 @@ public:
     std::string strWalletFile;
     std::set<int64_t> setKeyPool;
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
+    std::set<CKeyID> registeredKeys;
 
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;

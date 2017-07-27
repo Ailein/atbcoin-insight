@@ -23,8 +23,8 @@
 
 static const uint64_t GB_BYTES = 1000000000LL;
 /* Minimum free space (in GB) needed for data directory */
-static const uint64_t BLOCK_CHAIN_SIZE = 80;
-/* Minimum free space (in GB) needed for data directory when pruned; Does not include prune target */
+static const uint64_t BLOCK_CHAIN_SIZE = 2;
+/* Minimum free space (in GB) needed for ata directory when pruned; Does not include prune target */
 static const uint64_t CHAIN_STATE_SIZE = 2;
 /* Total required space (in GB) depending on user choice (prune, not prune) */
 static uint64_t requiredSpace;
@@ -121,7 +121,8 @@ Intro::Intro(QWidget *parent) :
     thread(0),
     signalled(false)
 {
-    ui->setupUi(this);
+    ui->setupUi(this);    this->setWindowFlags(this->windowFlags()& ~Qt::WindowContextHelpButtonHint);
+
     ui->welcomeLabel->setText(ui->welcomeLabel->text().arg(tr(PACKAGE_NAME)));
     ui->storageLabel->setText(ui->storageLabel->text().arg(tr(PACKAGE_NAME)));
     uint64_t pruneTarget = std::max<int64_t>(0, GetArg("-prune", 0));

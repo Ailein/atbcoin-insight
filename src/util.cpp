@@ -344,9 +344,10 @@ static void InterpretNegativeSetting(std::string& strKey, std::string& strValue)
 
 void ParseParameters(int argc, const char* const argv[])
 {
+
     mapArgs.clear();
     mapMultiArgs.clear();
-
+    mapArgs["-choosedatadir"]="1";
     for (int i = 1; i < argc; i++)
     {
         std::string str(argv[i]);

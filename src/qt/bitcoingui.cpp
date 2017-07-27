@@ -20,6 +20,7 @@
 #include "platformstyle.h"
 #include "rpcconsole.h"
 #include "utilitydialog.h"
+#include "backgroundimage.h"
 #ifdef ENABLE_WALLET
 #include "walletframe.h"
 #include "walletmodel.h"
@@ -55,7 +56,8 @@
 #include <QTimer>
 #include <QToolBar>
 #include <QVBoxLayout>
-
+#include <QFontDatabase>
+#include "ShareDialog.h"
 #if QT_VERSION < 0x050000
 #include <QTextDocument>
 #include <QUrl>
@@ -115,6 +117,8 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *platformStyle, const NetworkStyle *n
     helpMessageDialog(0),
     prevBlocks(0),
     spinnerFrame(0),
+    mainMenu(0),
+    shareDialog(0),
     platformStyle(platformStyle)
 {
     GUIUtil::restoreWindowGeometry("nWindow", QSize(850, 550), this);
@@ -183,8 +187,12 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *platformStyle, const NetworkStyle *n
 
     // Create status bar
     statusBar();
-    statusBar()->setMaximumHeight(20);
-
+    statusBar()->setMaximumHeight(30);
+#ifdef Q_OS_WIN
+    QFont font("sans-serif");
+    font.setStyleHint(QFont::SansSerif);
+    statusBar()->setFont(font);
+#endif
     // Disable size grip because it looks ugly and nobody needs it
     statusBar()->setSizeGripEnabled(false);
 
@@ -197,6 +205,8 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *platformStyle, const NetworkStyle *n
     frameBlocksLayout->setSpacing(3);
     unitDisplayControl = new UnitDisplayStatusBarControl(platformStyle);
     unitDisplayControl->setObjectName("unitDisplayControl");
+    if(COIN_MODE!=DYNAMIC_COIN_MODE)
+        unitDisplayControl->hide();
     labelEncryptionIcon = new QLabel();
     labelConnectionsIcon = new QLabel();
     labelBlocksIcon = new QLabel();
@@ -264,21 +274,22 @@ void BitcoinGUI::createActions()
 {
     QActionGroup *tabGroup = new QActionGroup(this);
     overviewAction = new QAction(platformStyle->SingleColorIcon(":/icons/overview",QColor::fromRgb(0xff,0xff,0xff)), tr("&Overview"), this);
+
     overviewAction->setStatusTip(tr("Show general overview of wallet"));
     overviewAction->setToolTip(overviewAction->statusTip());
     overviewAction->setCheckable(true);
     overviewAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_1));
     tabGroup->addAction(overviewAction);
 
-    sendCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/send",QColor::fromRgb(0x79,0xa6,0x90)), tr("&Send"), this);
+    sendCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/send",QColor::fromRgb(0xbc,0xe8,0xe5)), tr("&Send"), this);
     sendCoinsAction->setStatusTip(tr("Send coins to a ATBcoin address"));
     sendCoinsAction->setToolTip(sendCoinsAction->statusTip());
     sendCoinsAction->setCheckable(true);
     sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
     tabGroup->addAction(sendCoinsAction);
 
-    BonusCodeTab= new QAction(platformStyle->SingleColorIcon(":/icons/r_coupon",QColor::fromRgb(0x79,0xa6,0x90)),tr("Coupons"),this);
-    BonusCodeTab->setStatusTip(tr("Browse cou coupons"));
+    BonusCodeTab= new QAction(platformStyle->SingleColorIcon(":/icons/r_coupon",QColor::fromRgb(0xbc,0xe8,0xe5)),tr("Redeem codes"),this);
+    BonusCodeTab->setStatusTip(tr("Browse page of bonus codes"));
     BonusCodeTab->setToolTip(BonusCodeTab->statusTip());
     BonusCodeTab->setCheckable(true);
     BonusCodeTab->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
@@ -288,8 +299,8 @@ void BitcoinGUI::createActions()
     sendCoinsMenuAction->setStatusTip(sendCoinsAction->statusTip());
     sendCoinsMenuAction->setToolTip(sendCoinsMenuAction->statusTip());
 
-    receiveCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/receiving_addresses",QColor::fromRgb(0x79,0xa6,0x90)), tr("&Receive"), this);
-    receiveCoinsAction->setStatusTip(tr("Request payments (generates QR codes and bitcoin: URIs)"));
+    receiveCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/receiving_addresses",QColor::fromRgb(0xbc,0xe8,0xe5)), tr("&Receive"), this);
+    receiveCoinsAction->setStatusTip(tr("Request payments (generates QR codes and atbcoin: URIs)"));
     receiveCoinsAction->setToolTip(receiveCoinsAction->statusTip());
     receiveCoinsAction->setCheckable(true);
     receiveCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_3));
@@ -299,17 +310,21 @@ void BitcoinGUI::createActions()
     receiveCoinsMenuAction->setStatusTip(receiveCoinsAction->statusTip());
     receiveCoinsMenuAction->setToolTip(receiveCoinsMenuAction->statusTip());
 
-    historyAction = new QAction(platformStyle->SingleColorIcon(":/icons/history",QColor::fromRgb(0x79,0xa6,0x90)), tr("&Transactions"), this);
+    historyAction = new QAction(platformStyle->SingleColorIcon(":/icons/history",QColor::fromRgb(0xbc,0xe8,0xe5)), tr("&Transactions"), this);
     historyAction->setStatusTip(tr("Browse transaction history"));
     historyAction->setToolTip(historyAction->statusTip());
     historyAction->setCheckable(true);
     historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
     tabGroup->addAction(historyAction);
 
+    mainMenu=new QPushButton(platformStyle->SingleColorIcon(":/icons/about",Qt::white),"",this);
+    mainMenu->setObjectName("mainMenuButton");
+
 
 #ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
+    connect(mainMenu,SIGNAL(clicked(bool)),this,SLOT(callMenu()));
     connect(BonusCodeTab,SIGNAL(triggered(bool)),this,SLOT(gotoBonusCodes()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
@@ -329,13 +344,6 @@ void BitcoinGUI::createActions()
     quitAction->setStatusTip(tr("Quit application"));
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
-    aboutAction = new QAction(platformStyle->SingleColorIcon(":/icons/about"), tr("&About %1").arg(tr(PACKAGE_NAME)), this);
-    aboutAction->setStatusTip(tr("Show information about %1").arg(tr(PACKAGE_NAME)));
-    aboutAction->setMenuRole(QAction::AboutRole);
-    aboutAction->setEnabled(false);
-    aboutQtAction = new QAction(platformStyle->SingleColorIcon(":/icons/about_qt"), tr("About &Qt"), this);
-    aboutQtAction->setStatusTip(tr("Show information about Qt"));
-    aboutQtAction->setMenuRole(QAction::AboutQtRole);
     optionsAction = new QAction(platformStyle->SingleColorIcon(":/icons/options"), tr("&Options..."), this);
     optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(tr(PACKAGE_NAME)));
     optionsAction->setMenuRole(QAction::PreferencesRole);
@@ -364,16 +372,18 @@ void BitcoinGUI::createActions()
     usedReceivingAddressesAction = new QAction(platformStyle->SingleColorIcon(":/icons/address-book"), tr("&Receiving addresses..."), this);
     usedReceivingAddressesAction->setStatusTip(tr("Show the list of used receiving addresses and labels"));
 
-    openAction = new QAction(platformStyle->TextColorIcon(":/icons/open"), tr("Open &URI..."), this);
-    openAction->setStatusTip(tr("Open a bitcoin: URI or payment request"));
+    openAction = new QAction(platformStyle->SingleColorIcon(":/icons/open"), tr("Open &URI..."), this);
+    openAction->setStatusTip(tr("Open a atbcoin: URI or payment request"));
 
     showHelpMessageAction = new QAction(platformStyle->SingleColorIcon(":/icons/info"), tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
     showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible ATBcoin command-line options").arg(tr(PACKAGE_NAME)));
 
+    shareDialog=new QAction(platformStyle->SingleColorIcon(":/icons/new"), tr("&Money share"), this);
+
+    connect(shareDialog,SIGNAL(triggered(bool)),this,SLOT(shareDialogCliced()));
+
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
-    connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
-    connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
     connect(toggleHideAction, SIGNAL(triggered()), this, SLOT(toggleHidden()));
     connect(showHelpMessageAction, SIGNAL(triggered()), this, SLOT(showHelpMessageClicked()));
@@ -408,22 +418,24 @@ void BitcoinGUI::createMenuBar()
     // Get the main window's menu bar on other platforms
     appMenuBar = menuBar();
 #endif
-
+    appMenuBar->hide();
+    appMenuBar->setFont(GUIUtil::fixedPitchFont());
     // Configure the menus
     QMenu *file = appMenuBar->addMenu(tr("&File"));
+
     if(walletFrame)
     {
         file->addAction(openAction);
         file->addAction(backupWalletAction);
         file->addAction(signMessageAction);
         file->addAction(verifyMessageAction);
+        file->addAction(shareDialog);
         file->addSeparator();
         file->addAction(usedSendingAddressesAction);
         file->addAction(usedReceivingAddressesAction);
         file->addSeparator();
     }
     file->addAction(quitAction);
-
     QMenu *settings = appMenuBar->addMenu(tr("&Settings"));
     if(walletFrame)
     {
@@ -432,7 +444,6 @@ void BitcoinGUI::createMenuBar()
         settings->addSeparator();
     }
     settings->addAction(optionsAction);
-
     QMenu *help = appMenuBar->addMenu(tr("&Help"));
     if(walletFrame)
     {
@@ -440,22 +451,58 @@ void BitcoinGUI::createMenuBar()
     }
     help->addAction(showHelpMessageAction);
     help->addSeparator();
-    help->addAction(aboutAction);
-    help->addAction(aboutQtAction);
+    appMenuBar->setFont(GUIUtil::fixedPitchFont());
+    settings->setFont(GUIUtil::fixedPitchFont());
+    file->setFont(GUIUtil::fixedPitchFont());
+    help->setFont(GUIUtil::fixedPitchFont());
 }
-
+void BitcoinGUI::shareDialogCliced(){
+    (new ShareDialog(this))->show();
+}
 void BitcoinGUI::createToolBars()
 {
     if(walletFrame)
     {
         QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
-        toolbar->setMovable(false);
         toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        toolbar->setMovable(false);
+        QWidget * space;
+        toolbar->addWidget(mainMenu);
+        QFrame *line=new QFrame();
+        line->setFrameShape(QFrame::VLine);
+        toolbar->addWidget(line);
         toolbar->addAction(overviewAction);
+        space=new QWidget(this);
+        space->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
+        toolbar->addWidget(space);
+        line=new QFrame();
+        line->setFrameShape(QFrame::VLine);
+        toolbar->addWidget(line);
         toolbar->addAction(sendCoinsAction);
-        toolbar->addAction(BonusCodeTab);
+        space=new QWidget(this);
+        space->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
+        toolbar->addWidget(space);
+        line=new QFrame();
+        line->setFrameShape(QFrame::VLine);
+        toolbar->addWidget(line);
         toolbar->addAction(receiveCoinsAction);
+        space=new QWidget(this);
+        space->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
+        toolbar->addWidget(space);
+        line=new QFrame();
+        line->setFrameShape(QFrame::VLine);
+        toolbar->addWidget(line);
+        toolbar->addAction(BonusCodeTab);
+        space=new QWidget(this);
+        space->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
+        toolbar->addWidget(space);
+        line=new QFrame();
+        line->setFrameShape(QFrame::VLine);
+        toolbar->addWidget(line);
         toolbar->addAction(historyAction);
+        space=new QWidget(this);
+        space->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
+        space->resize(25,25);
         overviewAction->setChecked(true);
     }
 }
@@ -517,6 +564,7 @@ bool BitcoinGUI::addWallet(const QString& name, WalletModel *walletModel)
     if(!walletFrame)
         return false;
     setWalletActionsEnabled(true);
+    this->walletModel=walletModel;
     return walletFrame->addWallet(name, walletModel);
 }
 
@@ -576,6 +624,7 @@ void BitcoinGUI::createTrayIconMenu()
         return;
 
     trayIconMenu = new QMenu(this);
+    trayIconMenu->setFont(GUIUtil::fixedPitchFont());
     trayIcon->setContextMenu(trayIconMenu);
 
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
@@ -662,11 +711,11 @@ void BitcoinGUI::openClicked()
     }
 }
 void BitcoinGUI::checedTabChanged(){
-    BonusCodeTab->setIcon(platformStyle->SingleColorIcon(BonusCodeTab->icon(),QColor::fromRgb(0x79,0xa6,0x90)));
-    overviewAction->setIcon(platformStyle->SingleColorIcon(overviewAction->icon(),QColor::fromRgb(0x79,0xa6,0x90)));
-    historyAction->setIcon(platformStyle->SingleColorIcon(historyAction->icon(),QColor::fromRgb(0x79,0xa6,0x90)));
-    receiveCoinsAction->setIcon(platformStyle->SingleColorIcon(receiveCoinsAction->icon(),QColor::fromRgb(0x79,0xa6,0x90)));
-    sendCoinsAction->setIcon(platformStyle->SingleColorIcon(sendCoinsAction->icon(),QColor::fromRgb(0x79,0xa6,0x90)));
+    BonusCodeTab->setIcon(platformStyle->SingleColorIcon(BonusCodeTab->icon(),QColor::fromRgb(0xbc,0xe8,0xe5)));
+    overviewAction->setIcon(platformStyle->SingleColorIcon(overviewAction->icon(),QColor::fromRgb(0xbc,0xe8,0xe5)));
+    historyAction->setIcon(platformStyle->SingleColorIcon(historyAction->icon(),QColor::fromRgb(0xbc,0xe8,0xe5)));
+    receiveCoinsAction->setIcon(platformStyle->SingleColorIcon(receiveCoinsAction->icon(),QColor::fromRgb(0xbc,0xe8,0xe5)));
+    sendCoinsAction->setIcon(platformStyle->SingleColorIcon(sendCoinsAction->icon(),QColor::fromRgb(0xbc,0xe8,0xe5)));
 }
 void BitcoinGUI::gotoBonusCodes()
 {
@@ -952,7 +1001,6 @@ void BitcoinGUI::showEvent(QShowEvent *event)
 {
     // enable the debug window when the main window shows up
     openRPCConsoleAction->setEnabled(true);
-    aboutAction->setEnabled(true);
     optionsAction->setEnabled(true);
 }
 
@@ -1028,7 +1076,7 @@ void BitcoinGUI::setEncryptionStatus(int status)
         break;
     case WalletModel::Unlocked:
         labelEncryptionIcon->show();
-        labelEncryptionIcon->setPixmap(platformStyle->SingleColorIcon(":/icons/lock_open").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+        labelEncryptionIcon->setPixmap(platformStyle->SingleColorIcon(":/icons/lock_open",QColor(0x4b, 0xa2, 0x7e)).pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
         labelEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>unlocked</b>"));
         encryptWalletAction->setChecked(true);
         changePassphraseAction->setEnabled(true);
@@ -1036,7 +1084,7 @@ void BitcoinGUI::setEncryptionStatus(int status)
         break;
     case WalletModel::Locked:
         labelEncryptionIcon->show();
-        labelEncryptionIcon->setPixmap(platformStyle->SingleColorIcon(":/icons/lock_closed").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+        labelEncryptionIcon->setPixmap(platformStyle->SingleColorIcon(":/icons/lock_closed",QColor(0x4b, 0xa2, 0x7e)).pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
         labelEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>locked</b>"));
         encryptWalletAction->setChecked(true);
         changePassphraseAction->setEnabled(true);
@@ -1147,7 +1195,11 @@ void BitcoinGUI::unsubscribeFromCoreSignals()
     uiInterface.ThreadSafeMessageBox.disconnect(boost::bind(ThreadSafeMessageBox, this, _1, _2, _3));
     uiInterface.ThreadSafeQuestion.disconnect(boost::bind(ThreadSafeMessageBox, this, _1, _3, _4));
 }
-
+void BitcoinGUI::callMenu(){
+#ifndef Q_OS_MAC
+    appMenuBar->setHidden(!appMenuBar->isHidden());
+#endif
+}
 UnitDisplayStatusBarControl::UnitDisplayStatusBarControl(const PlatformStyle *platformStyle) :
     optionsModel(0),
     menu(0)
@@ -1175,7 +1227,8 @@ void UnitDisplayStatusBarControl::mousePressEvent(QMouseEvent *event)
 /** Creates context menu, its actions, and wires up all the relevant signals for mouse events. */
 void UnitDisplayStatusBarControl::createContextMenu()
 {
-    menu = new QMenu();
+    menu = new QMenu(this);
+    menu->setFont(GUIUtil::fixedPitchFont());
     Q_FOREACH(BitcoinUnits::Unit u, BitcoinUnits::availableUnits())
     {
         QAction *menuAction = new QAction(QString(BitcoinUnits::name(u)), this);

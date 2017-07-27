@@ -20,6 +20,7 @@
 #include "ui_interface.h"
 
 #include <QComboBox>
+#include <QPushButton>
 #include <QDateTimeEdit>
 #include <QDesktopServices>
 #include <QDoubleValidator>
@@ -37,7 +38,7 @@
 
 TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent), model(0), transactionProxyModel(0),
-    transactionView(0), abandonAction(0)
+    transactionView(0), abandonAction(0),exportButton(0)
 {
     // Build filter row
     setContentsMargins(0,0,0,0);
@@ -45,13 +46,6 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     QHBoxLayout *hlayout = new QHBoxLayout();
     hlayout->setContentsMargins(0,0,0,0);
 
-    if (platformStyle->getUseExtraSpacing()) {
-        hlayout->setSpacing(5);
-        hlayout->addSpacing(26);
-    } else {
-        hlayout->setSpacing(0);
-        hlayout->addSpacing(23);
-    }
 
     watchOnlyWidget = new QComboBox(this);
     watchOnlyWidget->setFixedWidth(24);
@@ -94,12 +88,15 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     hlayout->addWidget(typeWidget);
 
     addressWidget = new QLineEdit(this);
+    addressWidget->setObjectName("addressWidget");
 #if QT_VERSION >= 0x040700
     addressWidget->setPlaceholderText(tr("Enter address or label to search"));
 #endif
     hlayout->addWidget(addressWidget);
 
     amountWidget = new QLineEdit(this);
+    amountWidget->setObjectName("amountWidget");
+
 #if QT_VERSION >= 0x040700
     amountWidget->setPlaceholderText(tr("Min amount"));
 #endif
@@ -108,11 +105,22 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     } else {
         amountWidget->setFixedWidth(100);
     }
-    amountWidget->setValidator(new QDoubleValidator(0, 1e20, 8, this));
+    amountWidget->setValidator(new QDoubleValidator(0,1e20, 8, this));
     hlayout->addWidget(amountWidget);
 
+    exportButton = new QPushButton(tr("&Export"), this);
+    exportButton->setObjectName("ExportButton");
+    exportButton->setToolTip(tr("Export the data in the current tab to a file"));
+    if (platformStyle->getImagesOnButtons()) {
+        exportButton->setIcon(platformStyle->SingleColorIcon(":/icons/export",Qt::white));
+        exportButton->setIconSize(QSize(22,22));
+    }
+
+
+    hlayout->addWidget(exportButton);
+
     QVBoxLayout *vlayout = new QVBoxLayout(this);
-    vlayout->setContentsMargins(0,0,0,0);
+    vlayout->setContentsMargins(30,0,30,0);
     vlayout->setSpacing(0);
 
     QTableView *view = new QTableView(this);
@@ -120,22 +128,25 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     vlayout->addWidget(createDateRangeWidget());
     vlayout->addWidget(view);
     vlayout->setSpacing(0);
-    int width = view->verticalScrollBar()->sizeHint().width();
-    // Cover scroll bar width with spacing
-    if (platformStyle->getUseExtraSpacing()) {
-        hlayout->addSpacing(width+2);
-    } else {
-        hlayout->addSpacing(width);
-    }
-    // Always show scroll bar
+//    int width = view->verticalScrollBar()->sizeHint().width();
+//    // Cover scroll bar width with spacing
+//    if (platformStyle->getUseExtraSpacing()) {
+//        hlayout->addSpacing(width+2);
+//    } else {
+//        hlayout->addSpacing(width);
+//    }
+//    // Always show scroll bar
     view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     view->setTabKeyNavigation(false);
     view->setContextMenuPolicy(Qt::CustomContextMenu);
 
     view->installEventFilter(this);
 
-    transactionView = view;
 
+
+    transactionView = view;
+    transactionView->setShowGrid(false);
+    transactionView->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     // Actions
     abandonAction = new QAction(tr("Abandon transaction"), this);
     QAction *copyAddressAction = new QAction(tr("Copy address"), this);
@@ -147,7 +158,8 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     QAction *editLabelAction = new QAction(tr("Edit label"), this);
     QAction *showDetailsAction = new QAction(tr("Show transaction details"), this);
 
-    contextMenu = new QMenu();
+    contextMenu = new QMenu(this);
+    contextMenu->setFont(GUIUtil::fixedPitchFont());
     contextMenu->addAction(copyAddressAction);
     contextMenu->addAction(copyLabelAction);
     contextMenu->addAction(copyAmountAction);
@@ -169,6 +181,10 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     connect(watchOnlyWidget, SIGNAL(activated(int)), this, SLOT(chooseWatchonly(int)));
     connect(addressWidget, SIGNAL(textChanged(QString)), this, SLOT(changedPrefix(QString)));
     connect(amountWidget, SIGNAL(textChanged(QString)), this, SLOT(changedAmount(QString)));
+
+    // Clicking on "Export" allows to export the transaction list
+    connect(exportButton, SIGNAL(clicked(bool)), this, SLOT(exportClicked()));
+
 
     connect(view, SIGNAL(doubleClicked(QModelIndex)), this, SIGNAL(doubleClicked(QModelIndex)));
     connect(view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
@@ -194,7 +210,6 @@ void TransactionView::setModel(WalletModel *model)
         transactionProxyModel->setDynamicSortFilter(true);
         transactionProxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
         transactionProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
-
         transactionProxyModel->setSortRole(Qt::EditRole);
 
         transactionView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -241,6 +256,10 @@ void TransactionView::setModel(WalletModel *model)
     }
 }
 
+void TransactionView::refreshList(const QString &){
+    model->getTransactionTableModel()->refresh_model();
+    transactionView->repaint();
+}
 void TransactionView::chooseDate(int idx)
 {
     if(!transactionProxyModel)
@@ -480,7 +499,7 @@ void TransactionView::showDetails()
     QModelIndexList selection = transactionView->selectionModel()->selectedRows();
     if(!selection.isEmpty())
     {
-        TransactionDescDialog *dlg = new TransactionDescDialog(selection.at(0));
+        TransactionDescDialog *dlg = new TransactionDescDialog(selection.at(0),this);
         dlg->setAttribute(Qt::WA_DeleteOnClose);
         dlg->show();
     }
@@ -506,17 +525,18 @@ QWidget *TransactionView::createDateRangeWidget()
     layout->addWidget(new QLabel(tr("Range:")));
 
     dateFrom = new QDateTimeEdit(this);
-    dateFrom->setDisplayFormat("dd/MM/yy");
-    dateFrom->setCalendarPopup(true);
-    dateFrom->setMinimumWidth(100);
+    QLocale l(QLocale::system());
+    dateFrom->setDisplayFormat(l.dateFormat(QLocale::NarrowFormat));
+    dateFrom->setCalendarPopup(false);
+   // dateFrom->setMinimumWidth(90);
     dateFrom->setDate(QDate::currentDate().addDays(-7));
     layout->addWidget(dateFrom);
     layout->addWidget(new QLabel(tr("to")));
 
     dateTo = new QDateTimeEdit(this);
-    dateTo->setDisplayFormat("dd/MM/yy");
-    dateTo->setCalendarPopup(true);
-    dateTo->setMinimumWidth(100);
+    dateTo->setDisplayFormat(l.dateFormat(QLocale::NarrowFormat));
+    dateTo->setCalendarPopup(false);
+   // dateTo->setMinimumWidth(90);
     dateTo->setDate(QDate::currentDate());
     layout->addWidget(dateTo);
     layout->addStretch();

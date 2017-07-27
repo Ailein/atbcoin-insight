@@ -27,7 +27,6 @@ RecentRequestsTableModel::RecentRequestsTableModel(CWallet *wallet, WalletModel 
 
     /* These columns must match the indices in the ColumnIndex enumeration */
     columns << tr("Date") << tr("Label") << tr("Message") << getAmountTitle();
-
     connect(walletModel->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 }
 
@@ -57,6 +56,8 @@ QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) cons
 
     const RecentRequestEntry *rec = &list[index.row()];
 
+    if (role == Qt::TextAlignmentRole)
+            return Qt::AlignCenter;
     if(role == Qt::DisplayRole || role == Qt::EditRole)
     {
         switch(index.column())
@@ -94,6 +95,16 @@ QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) cons
     {
         if (index.column() == Amount)
             return (int)(Qt::AlignRight|Qt::AlignVCenter);
+    }else if(role == Qt::TextColorRole){
+
+        if(index.column()==Date){
+            return QColor(0xff,0xff,0xff);
+
+        }else{
+            return QColor(0xff,0xff,0xff);
+
+        }
+
     }
     return QVariant();
 }
@@ -125,7 +136,7 @@ void RecentRequestsTableModel::updateAmountColumnTitle()
 /** Gets title for amount column including current display unit if optionsModel reference available. */
 QString RecentRequestsTableModel::getAmountTitle()
 {
-    return (this->walletModel->getOptionsModel() != NULL) ? tr("Requested") + " ("+BitcoinUnits::name(this->walletModel->getOptionsModel()->getDisplayUnit()) + ")" : "";
+    return (this->walletModel->getOptionsModel() != NULL) ? tr("Requested") + " ("+BitcoinUnits::name(BitcoinUnit::BTC) + ")" : "";
 }
 
 QModelIndex RecentRequestsTableModel::index(int row, int column, const QModelIndex &parent) const

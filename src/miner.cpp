@@ -756,7 +756,7 @@ void ThreadStakeMiner(CWallet *pwallet)
         // }
 
         //check the next block height, wait for PoS
-        if (chainActive.Tip()->nHeight + 1 < Params().LastPOWBlock())
+        if (chainActive.Tip()->nHeight < Params().LastPOWBlock())
         {
             MilliSleep(60000);
             continue;
@@ -900,13 +900,13 @@ void static BitcoinMiner(const CChainParams& chainparams)
             }
 
             //check the block height
-            if (chainActive.Tip()->nHeight > Params().LastPOWBlock() + nStakeMinConfirmations)
+            if (chainActive.Tip()->nHeight >= Params().LastPOWBlock())
             {
                 // The stake is confirmed, stop the PoW miner
                 throw boost::thread_interrupted();
             }
             //check the next block height
-            else if (chainActive.Tip()->nHeight + 1 >= Params().LastPOWBlock())
+            else if (chainActive.Tip()->nHeight >= Params().LastPOWBlock())
             {
                 // Wait for the stake to be confirmed
                 MilliSleep(60000);

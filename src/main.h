@@ -166,7 +166,6 @@ extern BlockMap mapBlockIndex;
 
 extern std::set<std::pair<COutPoint, unsigned int> > setStakeSeen;
 extern int nStakeMinConfirmations;
-extern unsigned int nStakeMinAge;
 extern int64_t nLastCoinStakeSearchInterval;
 extern unsigned int nMinerSleep;
 

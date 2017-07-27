@@ -149,11 +149,11 @@ public:
         
         nPruneAfterHeight = 100000;
         
-        genesis = CreateGenesisBlock(1495784004, 158528623, 0x1f00ffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1499957579, 342485, 0x1f00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 
-        // ComputeGenesis(genesis, consensus.powLimit);
-        assert(consensus.hashGenesisBlock == uint256S("0000f166350e195d1a321b0ad27a624cb69f2e25e95004be52d631977126c35b"));
+        //ComputeGenesis(genesis, consensus.powLimit);
+        assert(consensus.hashGenesisBlock == uint256S("000059ccb73d95cf54b1ab4f23a1d1821f7ebf3246b9f125562bb78ddc254323"));
         assert(genesis.hashMerkleRoot == uint256S("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
         
 
@@ -184,7 +184,7 @@ public:
             0  // * estimated number of transactions per day after checkpoint
         };
 		
-        nLastPOWBlock = 17391;
+        nLastPOWBlock = 100;
         
     }
 };
@@ -242,11 +242,11 @@ public:
         nPruneAfterHeight = 1000;
 
         
-        genesis = CreateGenesisBlock(1495784004, 344425, 0x1f00ffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1499957579, 342485, 0x1f00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 
         // ComputeGenesis(genesis, consensus.powLimit);
-        assert(consensus.hashGenesisBlock == uint256S("0000762a0f6b4694b360ec07a24cefc498b019299791c2bd635b9d9bf4f82410"));
+        assert(consensus.hashGenesisBlock == uint256S("000059ccb73d95cf54b1ab4f23a1d1821f7ebf3246b9f125562bb78ddc254323"));
         assert(genesis.hashMerkleRoot == uint256S("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
         
 
@@ -284,7 +284,7 @@ public:
             0
         };
 		
-        nLastPOWBlock = 18391;
+        nLastPOWBlock = 100;
         
     }
 };
@@ -340,12 +340,12 @@ public:
         nPruneAfterHeight = 1000;
 
         
-        genesis = CreateGenesisBlock(1495784004, 1, 0x207fffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1499957579, 1, 0x207fffff, 1, 50 * COIN);
         
         consensus.hashGenesisBlock = genesis.GetHash();
 
-        // ComputeGenesis(genesis, consensus.powLimit);
-        assert(consensus.hashGenesisBlock == uint256S("0990e0bae97f9fb0b9ad3d0282165ea4bcd7ed85308a15e31e15eefad15956aa"));
+//        ComputeGenesis(genesis, consensus.powLimit);
+        assert(consensus.hashGenesisBlock == uint256S("03810e25d0f33fe8fcef2a49610d49543932f63036c11e0e2be30a870159fa9b"));
         assert(genesis.hashMerkleRoot == uint256S("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
         
 
@@ -367,7 +367,7 @@ public:
             0
         };
 
-        nLastPOWBlock = 0x7fffffff;
+        nLastPOWBlock = 100;
         
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);

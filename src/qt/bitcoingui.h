@@ -13,6 +13,7 @@
 #include "bonuscodetab.h"
 #include <QLabel>
 #include <QMainWindow>
+#include <QPushButton>
 #include <QMap>
 #include <QMenu>
 #include <QPoint>
@@ -80,7 +81,7 @@ protected:
 private:
     ClientModel *clientModel;
     WalletFrame *walletFrame;
-
+    WalletModel *walletModel;
     UnitDisplayStatusBarControl *unitDisplayControl;
     QLabel *labelEncryptionIcon;
     QLabel *labelConnectionsIcon;
@@ -90,6 +91,7 @@ private:
     QProgressDialog *progressDialog;
 
     QMenuBar *appMenuBar;
+    QPushButton *mainMenu;
     QAction *overviewAction;
     QAction *historyAction;
     QAction *quitAction;
@@ -112,6 +114,7 @@ private:
     QAction *openAction;
     QAction *showHelpMessageAction;
     QAction *BonusCodeTab;
+    QAction *shareDialog;
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
     Notificator *notificator;
@@ -142,6 +145,7 @@ private:
     void subscribeToCoreSignals();
     /** Disconnect core signals from GUI client */
     void unsubscribeFromCoreSignals();
+
 
 Q_SIGNALS:
     /** Signal raised when a URI was entered or dragged to the GUI */
@@ -197,6 +201,9 @@ private Q_SLOTS:
     void openClicked();
     void checedTabChanged();
 #endif // ENABLE_WALLET
+
+    /** show ShareDialogCliced*/
+    void shareDialogCliced();
     /** Show configuration dialog */
     void optionsClicked();
     /** Show about dialog */
@@ -219,7 +226,10 @@ private Q_SLOTS:
 
     /** called by a timer to check if fRequestShutdown has been set **/
     void detectShutdown();
-
+    /**
+     * @brief callMenu show context menu;
+     */
+    void callMenu();
     /** Show progress dialog e.g. for verifychain */
     void showProgress(const QString &title, int nProgress);
     

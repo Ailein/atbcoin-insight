@@ -1893,9 +1893,7 @@ void static PruneOrphanBlocks()
 // miner's coin base reward (POW)
 CAmount GetProofOfWorkReward()
 {
-    CAmount nSubsidy = 33000 * COIN;
-
-    return nSubsidy;
+    return (chainActive.Height() > 1000 ? 625 : 4990000) * CENT;
 }
 
 // miner's coin base reward (POS)
@@ -4098,7 +4096,7 @@ static bool UpdateHashProof(const CBlock& block, CValidationState& state, CBlock
     uint256 hash = block.GetHash();
 
     //reject proof of work at height Params().LastPOWBlock()
-    if (block.IsProofOfWork() && nHeight >= Params().LastPOWBlock())
+    if (block.IsProofOfWork() && nHeight > Params().LastPOWBlock())
         return state.DoS(100, error("AcceptBlock() : reject proof-of-work at height %d", nHeight));
     
     // Check coinstake timestamp
@@ -4207,7 +4205,7 @@ static bool AcceptBlock(const CBlock& block, CValidationState& state, const CCha
 
     int nHeight = pindex->nHeight;
 
-    if (block.IsProofOfWork() && nHeight >= Params().LastPOWBlock())
+    if (block.IsProofOfWork() && nHeight > Params().LastPOWBlock())
         return state.DoS(100, error("AcceptBlock() : reject proof-of-work at height %d", nHeight));
 
 

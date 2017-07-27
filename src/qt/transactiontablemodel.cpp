@@ -19,6 +19,7 @@
 #include "uint256.h"
 #include "util.h"
 #include "wallet/wallet.h"
+#include "cmath"
 
 #include <QColor>
 #include <QDateTime>
@@ -30,12 +31,12 @@
 
 // Amount column is right-aligned it contains numbers
 static int column_alignments[] = {
-        Qt::AlignLeft|Qt::AlignVCenter, /* status */
-        Qt::AlignLeft|Qt::AlignVCenter, /* watchonly */
-        Qt::AlignLeft|Qt::AlignVCenter, /* date */
+        Qt::AlignCenter|Qt::AlignVCenter, /* status */
+        Qt::AlignCenter|Qt::AlignVCenter, /* watchonly */
+        Qt::AlignCenter|Qt::AlignVCenter, /* date */
         Qt::AlignLeft|Qt::AlignVCenter, /* type */
-        Qt::AlignLeft|Qt::AlignVCenter, /* address */
-        Qt::AlignRight|Qt::AlignVCenter /* amount */
+        Qt::AlignCenter|Qt::AlignVCenter, /* address */
+        Qt::AlignCenter|Qt::AlignVCenter /* amount */
     };
 
 // Comparison operator for sort/binary search of model tx list
@@ -243,7 +244,7 @@ TransactionTableModel::TransactionTableModel(const PlatformStyle *platformStyle,
         fProcessingQueuedTransactions(false),
         platformStyle(platformStyle)
 {
-    columns << QString() << QString() << tr("Date") << tr("Type") << tr("Label") << BitcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
+    columns << QString() << QString() << tr("Date") << tr("Type") << tr("Label") << BitcoinUnits::getAmountColumnTitle(BitcoinUnit::BTC);
     priv->refreshWallet();
 
     connect(walletModel->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
@@ -263,7 +264,9 @@ void TransactionTableModel::updateAmountColumnTitle()
     columns[Amount] = BitcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
     Q_EMIT headerDataChanged(Qt::Horizontal,Amount,Amount);
 }
-
+void TransactionTableModel::refresh_model(){
+    priv->refreshWallet();
+}
 void TransactionTableModel::updateTransaction(const QString &hash, int status, bool showTransaction)
 {
     uint256 updated;
@@ -360,7 +363,7 @@ QString TransactionTableModel::lookupAddress(const std::string &address, bool to
     }
     if(label.isEmpty() || tooltip)
     {
-        description += QString(" (") + QString::fromStdString(address) + QString(")");
+        description += QString::fromStdString(address);
     }
     return description;
 }
@@ -429,8 +432,7 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
 QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
 {
     // Show addresses without label in a less visible color
-    switch(wtx->type)
-    {
+    switch(wtx->type)    {
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::SendToAddress:
     case TransactionRecord::Generated:
@@ -457,6 +459,7 @@ QString TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool
             str = QString("[") + str + QString("]");
         }
     }
+
     return QString(str);
 }
 
@@ -476,10 +479,16 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
     case TransactionStatus::Confirming:
         switch(wtx->status.depth)
         {
-        case 1: return QIcon(":/icons/transaction_1");
-        case 2: return QIcon(":/icons/transaction_2");
-        case 3: return QIcon(":/icons/transaction_3");
-        case 4: return QIcon(":/icons/transaction_4");
+        case 1:
+        case 2: return QIcon(":/icons/transaction_1");
+        case 3:
+        case 4: return QIcon(":/icons/transaction_2");
+        case 5:
+        case 6: return QIcon(":/icons/transaction_3");
+        case 7:
+        case 8: return QIcon(":/icons/transaction_4");
+
+
         default: return QIcon(":/icons/transaction_5");
         };
     case TransactionStatus::Confirmed:
@@ -513,7 +522,7 @@ QString TransactionTableModel::formatTooltip(const TransactionRecord *rec) const
     if(rec->type==TransactionRecord::RecvFromOther || rec->type==TransactionRecord::SendToOther ||
        rec->type==TransactionRecord::SendToAddress || rec->type==TransactionRecord::RecvWithAddress)
     {
-        tooltip += QString(" ") + formatTxToAddress(rec, true);
+        tooltip += QString(" ") + formatTxToAddress(rec, false);
     }
     return tooltip;
 }
@@ -533,14 +542,17 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
             return txStatusDecoration(rec);
         case Watchonly:
             return txWatchonlyDecoration(rec);
-        case ToAddress:
+        case Type:
             return txAddressDecoration(rec);
         }
         break;
     case Qt::DecorationRole:
     {
         QIcon icon = qvariant_cast<QIcon>(index.data(RawDecorationRole));
-        return platformStyle->TextColorIcon(icon);
+        if(index.column()==0){
+            return platformStyle->SingleColorIcon(icon,Qt::white);
+        }
+        return icon;
     }
     case Qt::DisplayRole:
         switch(index.column())
@@ -568,7 +580,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         case Watchonly:
             return (rec->involvesWatchAddress ? 1 : 0);
         case ToAddress:
-            return formatTxToAddress(rec, true);
+            return formatTxToAddress(rec, false);
         case Amount:
             return qint64(rec->credit + rec->debit);
         }
@@ -579,23 +591,13 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return column_alignments[index.column()];
     case Qt::ForegroundRole:
         // Use the "danger" color for abandoned transactions
-        if(rec->status.status == TransactionStatus::Abandoned)
-        {
-            return COLOR_TX_STATUS_DANGER;
+        if(index.column() == Amount|| index.column() == Type){
+            if((rec->credit+rec->debit) < 0)
+                return COLOR_NEGATIVE;
+            else
+                return COLOR_POSITIVE;
         }
-        // Non-confirmed (but not immature) as transactions are grey
-        if(!rec->status.countsForBalance && rec->status.status != TransactionStatus::Immature)
-        {
-            return COLOR_UNCONFIRMED;
-        }
-        if(index.column() == Amount && (rec->credit+rec->debit) < 0)
-        {
-            return COLOR_NEGATIVE;
-        }
-        if(index.column() == ToAddress)
-        {
-            return addressColor(rec);
-        }
+        return QColor(0xc5,0xec,0xe8);
         break;
     case TypeRole:
         return rec->type;
@@ -668,7 +670,7 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
         }
         else if (role == Qt::TextAlignmentRole)
         {
-            return column_alignments[section];
+            return Qt::AlignCenter;
         } else if (role == Qt::ToolTipRole)
         {
             switch(section)

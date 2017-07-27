@@ -1986,10 +1986,6 @@ void CWallet::AvailableCoinsForStaking(vector<COutput>& vCoins) const
 			if (nDepth < nStakeMinConfirmations)
 				continue;
 
-            // Filtering by tx timestamp instead of block timestamp may give false positives but never false negatives
-            if (pcoin->nTime + nStakeMinAge > GetTime())
-                continue;
-
             if (pcoin->GetBlocksToMaturity() > 0)
                 continue;
 
@@ -2686,7 +2682,7 @@ uint64_t CWallet::GetStakeWeight() const
     LOCK2(cs_main, cs_wallet);
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {
-		if ((pcoin.first->GetDepthInMainChain() >= nStakeMinConfirmations) && (GetTime() - pcoin.first->nTime > nStakeMinAge))
+		if (pcoin.first->GetDepthInMainChain() >= nStakeMinConfirmations)
 			nWeight += pcoin.first->vout[pcoin.second].nValue;
     }
 
@@ -3790,7 +3786,7 @@ bool CWallet::InitLoadWallet()
     }
 
     if (fFirstRun)
-    {
+    {         
         // Create new keyUser and set as default key
         if (GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && walletInstance->hdChain.masterKeyID.IsNull()) {
             // generate a new master key

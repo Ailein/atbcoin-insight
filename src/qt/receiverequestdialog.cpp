@@ -32,7 +32,8 @@
 QRImageWidget::QRImageWidget(QWidget *parent):
     QLabel(parent), contextMenu(0)
 {
-    contextMenu = new QMenu();
+    contextMenu = new QMenu(this);
+    contextMenu->setFont(GUIUtil::fixedPitchFont());
     QAction *saveImageAction = new QAction(tr("&Save Image..."), this);
     connect(saveImageAction, SIGNAL(triggered()), this, SLOT(saveImage()));
     contextMenu->addAction(saveImageAction);
@@ -94,7 +95,8 @@ ReceiveRequestDialog::ReceiveRequestDialog(QWidget *parent) :
     ui(new Ui::ReceiveRequestDialog),
     model(0)
 {
-    ui->setupUi(this);
+    ui->setupUi(this);    this->setWindowFlags(this->windowFlags()& ~Qt::WindowContextHelpButtonHint);
+
 
 #ifndef USE_QRCODE
     ui->btnSaveAs->setVisible(false);
@@ -183,7 +185,8 @@ void ReceiveRequestDialog::update()
             qrAddrImage.fill(0xffffff);
             QPainter painter(&qrAddrImage);
             painter.drawImage(0, 0, qrImage.scaled(QR_IMAGE_SIZE, QR_IMAGE_SIZE));
-            QFont font = GUIUtil::fixedPitchFont();
+            QFont font("sans-serif");
+            font.setStyleHint(QFont::SansSerif);
             font.setPixelSize(12);
             painter.setFont(font);
             QRect paddedRect = qrAddrImage.rect();

@@ -255,7 +255,8 @@ RPCConsole::RPCConsole(const PlatformStyle *platformStyle, QWidget *parent) :
     banTableContextMenu(0),
     consoleFontSize(0)
 {
-    ui->setupUi(this);
+    ui->setupUi(this);    this->setWindowFlags(this->windowFlags()& ~Qt::WindowContextHelpButtonHint);
+
     GUIUtil::restoreWindowGeometry("nRPCConsoleWindow", this->size(), this);
 
     ui->openDebugLogfileButton->setToolTip(ui->openDebugLogfileButton->toolTip().arg(tr(PACKAGE_NAME)));
@@ -268,6 +269,7 @@ RPCConsole::RPCConsole(const PlatformStyle *platformStyle, QWidget *parent) :
     //ui->fontSmallerButton->setIcon(platformStyle->SingleColorIcon(":/icons/fontsmaller"));
     // Install event filter for up and down arrow
     ui->lineEdit->installEventFilter(this);
+    ui->lineEdit->setObjectName("rpclineEdit");
     ui->messagesWidget->installEventFilter(this);
 
     connect(ui->clear_Button, SIGNAL(clicked()), this, SLOT(clear()));
@@ -298,7 +300,6 @@ RPCConsole::RPCConsole(const PlatformStyle *platformStyle, QWidget *parent) :
     consoleFontSize = settings.value(fontSizeSettingsKey, QFontInfo(QFont()).pointSize()).toInt();
     clear();
 }
-
 RPCConsole::~RPCConsole()
 {
     GUIUtil::saveWindowGeometry("nRPCConsoleWindow", this);
@@ -389,7 +390,8 @@ void RPCConsole::setClientModel(ClientModel *model)
         QAction* banAction365d    = new QAction(tr("Ban Node for") + " " + tr("1 &year"), this);
 
         // create peer table context menu
-        peersTableContextMenu = new QMenu();
+        peersTableContextMenu = new QMenu(this);
+        peersTableContextMenu->setFont(GUIUtil::fixedPitchFont());
         peersTableContextMenu->addAction(disconnectAction);
         peersTableContextMenu->addAction(banAction1h);
         peersTableContextMenu->addAction(banAction24h);
@@ -435,7 +437,8 @@ void RPCConsole::setClientModel(ClientModel *model)
         QAction* unbanAction = new QAction(tr("&Unban Node"), this);
 
         // create ban table context menu
-        banTableContextMenu = new QMenu();
+        banTableContextMenu = new QMenu(this);
+        banTableContextMenu->setFont(GUIUtil::fixedPitchFont());
         banTableContextMenu->addAction(unbanAction);
 
         // ban table context menu signals
@@ -835,6 +838,8 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
 void RPCConsole::resizeEvent(QResizeEvent *event)
 {
     QWidget::resizeEvent(event);
+    ui->tabWidget->setStyleSheet(QString("QTabBar::tab {width:%0;}").arg(this->width()/4.3));
+
 }
 
 void RPCConsole::showEvent(QShowEvent *event)

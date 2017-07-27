@@ -5,11 +5,14 @@
 #include <QWidget>
 #include "walletmodel.h"
 #include "clientmodel.h"
+#include "../txmempool.h"
 #include "transactionfilterproxy.h"
 #include <QStandardItemModel>
-#define KEY_TEMPLATE "3EIOPJ4A-JMWUIGPV-NR76TESB-UYWH1UJS-HWJOXSWK"
+/*Random characters will be used instead of zeros.*/
+#define KEY_TEMPLATE "ATB-00000000-00000000-00000000-00000000-00000000"
 namespace Ui {
 class BonusCodeTab;
+
 }
 
 class BonusCodeTab : public QWidget
@@ -24,17 +27,21 @@ public:
 public Q_SLOTS:
     void updateBonusList();
 private:
+    void resizeEvent(QResizeEvent*);
     Ui::BonusCodeTab *ui;
     ClientModel *clientModel;
-    WalletModel *wmodel; 
+    WalletModel *wmodel;
     const PlatformStyle *platformStyle;
     bool keyCheck(const std::string &str);
     CWalletTx* findTx(const CScript& script);
     QSortFilterProxyModel *model;
 private Q_SLOTS:
+    void confirmation(const uint256 &, int);
     void cliced(QModelIndex);
     void getBonusClick(bool);
     void CreateClick(bool);
+Q_SIGNALS:
+    void couponAdded(const QString&);// emitted when a new coupon added into wallet. where a parameter it is hash of transaction with coupon
 };
 
 #endif // BONUSCODETAB_H

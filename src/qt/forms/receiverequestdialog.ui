@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>487</width>
+    <width>700</width>
     <height>597</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>700</width>
+    <height>0</height>
+   </size>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
@@ -92,7 +98,7 @@
      <item>
       <widget class="QPushButton" name="btnSaveAs">
        <property name="text">
-        <string>&amp;Save Image...</string>
+        <string>&amp;Save Image</string>
        </property>
        <property name="autoDefault">
         <bool>false</bool>

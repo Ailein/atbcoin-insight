@@ -35,19 +35,22 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *platformStyle, QWidget *pa
     ui(new Ui::SendCoinsDialog),
     clientModel(0),
     model(0),
+    image(0),
     fNewRecipientAllowed(true),
     fFeeMinimized(true),
     platformStyle(platformStyle)
 {
-    ui->setupUi(this);
+    image=new BackgroundImage(":/icons/sendImage",this);
+    ui->setupUi(this);    this->setWindowFlags(this->windowFlags()& ~Qt::WindowContextHelpButtonHint);
 
+    image->resize(251,389);
     if (!platformStyle->getImagesOnButtons()) {
         ui->addButton->setIcon(QIcon());
         ui->clearButton->setIcon(QIcon());
         ui->sendButton->setIcon(QIcon());
     } else {
-        ui->addButton->setIcon(platformStyle->SingleColorIcon(":/icons/add",QColor::fromRgb(157,154,121)));
-        ui->clearButton->setIcon(platformStyle->SingleColorIcon(":/icons/quit",QColor::fromRgb(157,154,121)));
+        ui->addButton->setIcon(platformStyle->SingleColorIcon(":/icons/add",Qt::white));
+        ui->clearButton->setIcon(platformStyle->SingleColorIcon(":/icons/quit",Qt::white));
         ui->sendButton->setIcon(platformStyle->SingleColorIcon(":/icons/send",Qt::white));
     }
 
@@ -88,7 +91,7 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *platformStyle, QWidget *pa
     ui->labelCoinControlPriority->addAction(clipboardPriorityAction);
     ui->labelCoinControlLowOutput->addAction(clipboardLowOutputAction);
     ui->labelCoinControlChange->addAction(clipboardChangeAction);
-
+    ui->buttonMinimizeFee->setIcon(platformStyle->SingleColorIcon(":/icons/Up",QColor(0x99,0xcc,0xc7)));
     // init transaction fee section
     QSettings settings;
     if (!settings.contains("fFeeSectionMinimized"))
@@ -293,7 +296,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     if(txFee > 0)
     {
         // append fee string if a fee is required
-        questionString.append("<hr /><span style='color:#aa0000;'>");
+        questionString.append("<hr /><span style='color:#f6e395;'>");
         questionString.append(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
         questionString.append("</span> ");
         questionString.append(tr("added as transaction fee"));
@@ -575,7 +578,10 @@ void SendCoinsDialog::on_buttonMinimizeFee_clicked()
     updateFeeMinimizedLabel();
     minimizeFeeSection(true);
 }
-
+void SendCoinsDialog::resizeEvent(QResizeEvent *){
+    if(image)
+        image->move(this->width()-251,this->height()-389);
+}
 void SendCoinsDialog::setMinimumFee()
 {
     ui->radioCustomPerKilobyte->setChecked(true);
@@ -632,9 +638,8 @@ void SendCoinsDialog::updateFeeMinimizedLabel()
 void SendCoinsDialog::updateMinFeeLabel()
 {
     if (model && model->getOptionsModel())
-        ui->checkBoxMinimumFee->setText(tr("Pay only the required fee of %1").arg(
-            BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), CWallet::GetRequiredFee(1000)) + "/kB")
-        );
+        ui->labelMinFeeWarning->setText(tr("Pay only the required fee of %1").arg(
+                                            BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), CWallet::GetRequiredFee(1000)) + "/kB"));
 }
 
 void SendCoinsDialog::updateSmartFeeLabel()
@@ -651,12 +656,14 @@ void SendCoinsDialog::updateSmartFeeLabel()
                                                                 std::max(CWallet::fallbackFee.GetFeePerK(), CWallet::GetRequiredFee(1000))) + "/kB");
         ui->labelSmartFee2->show(); // (Smart fee not initialized yet. This usually takes a few blocks...)
         ui->labelFeeEstimation->setText("");
+        ui->labelFeeEstimation->hide();
     }
     else
     {
         ui->labelSmartFee->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(),
                                                                 std::max(feeRate.GetFeePerK(), CWallet::GetRequiredFee(1000))) + "/kB");
         ui->labelSmartFee2->hide();
+        ui->labelFeeEstimation->show();
         ui->labelFeeEstimation->setText(tr("Estimated to begin confirmation within %n block(s).", "", estimateFoundAtBlocks));
     }
 

@@ -35,7 +35,8 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
     QDialog(parent),
     ui(new Ui::HelpMessageDialog)
 {
-    ui->setupUi(this);
+    ui->setupUi(this);    this->setWindowFlags(this->windowFlags()& ~Qt::WindowContextHelpButtonHint);
+
 
     QString version = tr(PACKAGE_NAME) + " " + tr("version") + " " + QString::fromStdString(FormatFullVersion());
     /* On x86 add a bit specifier to the version so that users can distinguish between
@@ -70,7 +71,7 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
     } else {
         setWindowTitle(tr("Command-line options"));
         QString header = tr("Usage:") + "\n" +
-            "  bitcoin-qt [" + tr("command-line options") + "]                     " + "\n";
+            "  atbcoin-qt [" + tr("command-line options") + "]                     " + "\n";
         QTextCursor cursor(ui->helpMessage->document());
         cursor.insertText(version);
         cursor.insertBlock();
@@ -178,6 +179,8 @@ void ShutdownWindow::showShutdownWindow(BitcoinGUI *window)
 
     // Show a simple window indicating shutdown status
     QWidget *shutdownWindow = new ShutdownWindow();
+    shutdownWindow->setObjectName("shutdownWindow");
+    CSS::ReadCss(shutdownWindow,":/style/WalletStyle");
     // We don't hold a direct pointer to the shutdown window after creation, so use
     // Qt::WA_DeleteOnClose to make sure that the window will be deleted eventually.
     shutdownWindow->setAttribute(Qt::WA_DeleteOnClose);
